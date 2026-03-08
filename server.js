@@ -104,6 +104,11 @@ ${nameText}
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`사주 분석 서버가 http://localhost:${PORT} 에서 실행중입니다.`);
-});
+// 로컬 실행 시에만 서버 시작 (Vercel 환경에서는 export default로 처리)
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`사주 분석 서버가 http://localhost:${PORT} 에서 실행중입니다.`);
+  });
+}
+
+export default app;
