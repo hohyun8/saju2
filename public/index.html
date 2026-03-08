@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>사주 분석 - AI 사주팔자</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+      background-color: #1a1f3c;
+      color: #fff;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 0 20px 60px;
+    }
+
+    /* Header */
+    .header {
+      text-align: center;
+      padding: 40px 0 30px;
+    }
+
+    .header-icon {
+      font-size: 48px;
+      margin-bottom: 12px;
+      display: block;
+      filter: drop-shadow(0 0 12px rgba(255, 200, 0, 0.6));
+    }
+
+    .header h1 {
+      font-size: 28px;
+      font-weight: 700;
+      color: #ffd700;
+      margin-bottom: 8px;
+    }
+
+    .header p {
+      font-size: 14px;
+      color: #a0a8c8;
+    }
+
+    /* Divider */
+    .divider {
+      border: none;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      margin: 4px 0 28px;
+    }
+
+    /* Form */
+    .form-group {
+      margin-bottom: 28px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 15px;
+      font-weight: 600;
+      color: #e0e6ff;
+      margin-bottom: 10px;
+    }
+
+    .form-label .optional {
+      font-size: 13px;
+      font-weight: 400;
+      color: #7880a8;
+      margin-left: 4px;
+    }
+
+    /* Text input */
+    .form-input {
+      width: 100%;
+      padding: 14px 16px;
+      background: #252b4a;
+      border: 1.5px solid #3a4170;
+      border-radius: 10px;
+      color: #fff;
+      font-size: 15px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .form-input::placeholder {
+      color: #4a5270;
+    }
+
+    .form-input:focus {
+      border-color: #ffd700;
+    }
+
+    /* Toggle buttons */
+    .toggle-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .toggle-btn {
+      padding: 14px;
+      border-radius: 10px;
+      border: 1.5px solid #3a4170;
+      background: #252b4a;
+      color: #a0a8c8;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .toggle-btn.active {
+      background: #ffd700;
+      border-color: #ffd700;
+      color: #1a1f3c;
+    }
+
+    .toggle-btn:hover:not(.active) {
+      border-color: #ffd700;
+      color: #ffd700;
+    }
+
+    /* Select dropdowns */
+    .select-group {
+      display: grid;
+      grid-template-columns: 2fr 1.5fr 1.5fr;
+      gap: 10px;
+    }
+
+    .form-select {
+      width: 100%;
+      padding: 14px 12px;
+      background: #252b4a;
+      border: 1.5px solid #3a4170;
+      border-radius: 10px;
+      color: #fff;
+      font-size: 14px;
+      outline: none;
+      cursor: pointer;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a0a8c8' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      padding-right: 32px;
+      transition: border-color 0.2s;
+    }
+
+    .form-select:focus {
+      border-color: #ffd700;
+    }
+
+    .form-select option {
+      background: #252b4a;
+    }
+
+    .form-select.full-width {
+      grid-column: 1 / -1;
+    }
+
+    /* Submit button */
+    .submit-btn {
+      width: 100%;
+      padding: 17px;
+      background: #ffd700;
+      border: none;
+      border-radius: 12px;
+      color: #1a1f3c;
+      font-size: 17px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 8px;
+      letter-spacing: -0.3px;
+    }
+
+    .submit-btn:hover:not(:disabled) {
+      background: #ffdf33;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(255, 215, 0, 0.3);
+    }
+
+    .submit-btn:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    .submit-btn:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+
+    /* Result section */
+    .result-section {
+      display: none;
+      margin-top: 40px;
+    }
+
+    .result-section.visible {
+      display: block;
+    }
+
+    .result-header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .result-header h2 {
+      font-size: 20px;
+      color: #ffd700;
+      font-weight: 700;
+    }
+
+    .result-box {
+      background: #252b4a;
+      border: 1px solid #3a4170;
+      border-radius: 14px;
+      padding: 24px;
+      line-height: 1.8;
+      font-size: 14.5px;
+      color: #d0d8f8;
+      min-height: 100px;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    /* Markdown-style rendering */
+    .result-box h1 { font-size: 20px; color: #ffd700; margin: 20px 0 10px; }
+    .result-box h2 { font-size: 17px; color: #ffd700; margin: 18px 0 8px; border-bottom: 1px solid rgba(255,215,0,0.2); padding-bottom: 6px; }
+    .result-box h3 { font-size: 15px; color: #a8d0ff; margin: 14px 0 6px; }
+    .result-box strong { color: #fff; font-weight: 700; }
+    .result-box p { margin-bottom: 8px; }
+    .result-box ul, .result-box ol { margin: 6px 0 10px 18px; }
+    .result-box li { margin-bottom: 4px; }
+    .result-box hr { border-color: rgba(255,255,255,0.1); margin: 14px 0; }
+
+    /* Loading spinner */
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 16px 0;
+      color: #a0a8c8;
+      font-size: 14px;
+    }
+
+    .spinner {
+      width: 20px;
+      height: 20px;
+      border: 2px solid #3a4170;
+      border-top-color: #ffd700;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Error */
+    .error-box {
+      background: rgba(255, 80, 80, 0.1);
+      border: 1px solid rgba(255, 80, 80, 0.3);
+      border-radius: 10px;
+      padding: 14px 18px;
+      color: #ff8080;
+      font-size: 14px;
+      margin-top: 16px;
+    }
+
+    /* Reset button */
+    .reset-btn {
+      display: block;
+      width: 100%;
+      margin-top: 16px;
+      padding: 13px;
+      background: transparent;
+      border: 1.5px solid #3a4170;
+      border-radius: 10px;
+      color: #a0a8c8;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .reset-btn:hover {
+      border-color: #ffd700;
+      color: #ffd700;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <span class="header-icon">✨</span>
+      <h1>사주 정보 입력</h1>
+      <p>정확한 생년월일시를 입력할수록 분석이 정밀해집니다</p>
+    </div>
+
+    <hr class="divider" />
+
+    <!-- Form -->
+    <form id="sajuForm">
+      <!-- Name -->
+      <div class="form-group">
+        <label class="form-label">이름 <span class="optional">(선택)</span></label>
+        <input type="text" id="name" class="form-input" placeholder="이름을 입력하세요" />
+      </div>
+
+      <!-- Gender -->
+      <div class="form-group">
+        <label class="form-label">성별</label>
+        <div class="toggle-group">
+          <button type="button" class="toggle-btn active" data-value="male" onclick="setGender('male')">♂ 남성</button>
+          <button type="button" class="toggle-btn" data-value="female" onclick="setGender('female')">♀ 여성</button>
+        </div>
+        <input type="hidden" id="gender" value="male" />
+      </div>
+
+      <!-- Calendar type -->
+      <div class="form-group">
+        <label class="form-label">달력 유형</label>
+        <div class="toggle-group">
+          <button type="button" class="toggle-btn active" data-value="solar" onclick="setCalendar('solar')">양력</button>
+          <button type="button" class="toggle-btn" data-value="lunar" onclick="setCalendar('lunar')">음력</button>
+        </div>
+        <input type="hidden" id="calendarType" value="solar" />
+      </div>
+
+      <!-- Birth date -->
+      <div class="form-group">
+        <label class="form-label">생년월일</label>
+        <div class="select-group">
+          <select id="birthYear" class="form-select"></select>
+          <select id="birthMonth" class="form-select"></select>
+          <select id="birthDay" class="form-select"></select>
+        </div>
+      </div>
+
+      <!-- Birth time -->
+      <div class="form-group">
+        <label class="form-label">출생 시간</label>
+        <div class="select-group">
+          <select id="birthTime" class="form-select full-width"></select>
+        </div>
+      </div>
+
+      <!-- Submit -->
+      <button type="submit" class="submit-btn" id="submitBtn">
+        ✨ 사주 분석하기
+      </button>
+    </form>
+
+    <!-- Result section -->
+    <div class="result-section" id="resultSection">
+      <div class="result-header">
+        <h2>🔮 사주 분석 결과</h2>
+      </div>
+      <div class="result-box" id="resultBox"></div>
+      <button class="reset-btn" onclick="resetForm()">← 다시 분석하기</button>
+    </div>
+  </div>
+
+  <script>
+    // Populate year select
+    const yearSelect = document.getElementById('birthYear');
+    const currentYear = new Date().getFullYear();
+    for (let y = currentYear; y >= 1924; y--) {
+      const opt = document.createElement('option');
+      opt.value = y;
+      opt.textContent = `${y}년`;
+      if (y === 1990) opt.selected = true;
+      yearSelect.appendChild(opt);
+    }
+
+    // Populate month select
+    const monthSelect = document.getElementById('birthMonth');
+    for (let m = 1; m <= 12; m++) {
+      const opt = document.createElement('option');
+      opt.value = m;
+      opt.textContent = `${m}월`;
+      monthSelect.appendChild(opt);
+    }
+
+    // Populate day select
+    const daySelect = document.getElementById('birthDay');
+    for (let d = 1; d <= 31; d++) {
+      const opt = document.createElement('option');
+      opt.value = d;
+      opt.textContent = `${d}일`;
+      daySelect.appendChild(opt);
+    }
+
+    // Populate time select
+    const timeSelect = document.getElementById('birthTime');
+    const times = [
+      { value: 'unknown', label: '모름' },
+      { value: '자시 (23:00~01:00)', label: '자시 (23:00~01:00)' },
+      { value: '축시 (01:00~03:00)', label: '축시 (01:00~03:00)' },
+      { value: '인시 (03:00~05:00)', label: '인시 (03:00~05:00)' },
+      { value: '묘시 (05:00~07:00)', label: '묘시 (05:00~07:00)' },
+      { value: '진시 (07:00~09:00)', label: '진시 (07:00~09:00)' },
+      { value: '사시 (09:00~11:00)', label: '사시 (09:00~11:00)' },
+      { value: '오시 (11:00~13:00)', label: '오시 (11:00~13:00)' },
+      { value: '미시 (13:00~15:00)', label: '미시 (13:00~15:00)' },
+      { value: '신시 (15:00~17:00)', label: '신시 (15:00~17:00)' },
+      { value: '유시 (17:00~19:00)', label: '유시 (17:00~19:00)' },
+      { value: '술시 (19:00~21:00)', label: '술시 (19:00~21:00)' },
+      { value: '해시 (21:00~23:00)', label: '해시 (21:00~23:00)' },
+    ];
+
+    times.forEach(t => {
+      const opt = document.createElement('option');
+      opt.value = t.value;
+      opt.textContent = t.label;
+      timeSelect.appendChild(opt);
+    });
+
+    function setGender(value) {
+      document.getElementById('gender').value = value;
+      document.querySelectorAll('[data-value="male"], [data-value="female"]').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.value === value);
+      });
+    }
+
+    function setCalendar(value) {
+      document.getElementById('calendarType').value = value;
+      document.querySelectorAll('[data-value="solar"], [data-value="lunar"]').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.value === value);
+      });
+    }
+
+    // Simple markdown renderer
+    function renderMarkdown(text) {
+      return text
+        .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+        .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+        .replace(/^# (.+)$/gm, '<h1>$1</h1>')
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/^- (.+)$/gm, '<li>$1</li>')
+        .replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>')
+        .replace(/^---$/gm, '<hr>')
+        .replace(/\n\n/g, '</p><p>')
+        .replace(/^(?!<[hul]|<hr)(.+)$/gm, '<p>$1</p>');
+    }
+
+    document.getElementById('sajuForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const submitBtn = document.getElementById('submitBtn');
+      const resultSection = document.getElementById('resultSection');
+      const resultBox = document.getElementById('resultBox');
+
+      const payload = {
+        name: document.getElementById('name').value.trim(),
+        gender: document.getElementById('gender').value,
+        calendarType: document.getElementById('calendarType').value,
+        birthYear: document.getElementById('birthYear').value,
+        birthMonth: document.getElementById('birthMonth').value,
+        birthDay: document.getElementById('birthDay').value,
+        birthTime: document.getElementById('birthTime').value,
+      };
+
+      // Show result section
+      submitBtn.disabled = true;
+      submitBtn.textContent = '분석 중...';
+      resultSection.classList.add('visible');
+      resultBox.innerHTML = '<div class="loading"><div class="spinner"></div><span>사주를 분석하고 있습니다...</span></div>';
+
+      // Scroll to result
+      setTimeout(() => resultSection.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+
+      let fullText = '';
+
+      try {
+        const response = await fetch('/api/analyze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+
+        if (!response.ok) throw new Error('서버 오류');
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        let firstChunk = true;
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop();
+
+          for (const line of lines) {
+            if (!line.startsWith('data: ')) continue;
+            const jsonStr = line.slice(6).trim();
+            if (!jsonStr) continue;
+
+            try {
+              const data = JSON.parse(jsonStr);
+
+              if (data.error) {
+                resultBox.innerHTML = `<div class="error-box">⚠️ ${data.error}</div>`;
+                break;
+              }
+
+              if (data.done) break;
+
+              if (data.text) {
+                if (firstChunk) {
+                  resultBox.innerHTML = '';
+                  firstChunk = false;
+                }
+                fullText += data.text;
+                resultBox.innerHTML = renderMarkdown(fullText);
+              }
+            } catch (_) {}
+          }
+        }
+      } catch (err) {
+        resultBox.innerHTML = `<div class="error-box">⚠️ 분석 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.</div>`;
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '✨ 사주 분석하기';
+      }
+    });
+
+    function resetForm() {
+      document.getElementById('resultSection').classList.remove('visible');
+      document.getElementById('resultBox').innerHTML = '';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  </script>
+</body>
+</html>
